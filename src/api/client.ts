@@ -1,5 +1,13 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
+type ApiEnvelope<T> = {
+  success: boolean;
+  status_code: number;
+  message?: string;
+  data?: T;
+  error?: string;
+};
+
 export async function apiRequest<T>(
   path: string,
   options?: RequestInit,
@@ -12,20 +20,19 @@ export async function apiRequest<T>(
     ...options,
   });
 
-  if (!response.ok) {
-    let message = 'Request failed';
+  let result: ApiEnvelope<T>;
 
-    try {
-      const errorData = (await response.json()) as { error?: string };
-      if (errorData.error) {
-        message = errorData.error;
-      }
-    } catch {
-      // ignore
-    }
-
-    throw new Error(message);
+  try {
+    result = (await response.json()) as ApiEnvelope<T>;
+  } catch {
+    throw new Error(`Ошибка ответа сервера. Код: ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  if (!response.ok || !result.success) {
+    throw new Error(
+      result.error || `Ошибка запроса. Код: ${result.status_code || response.status}`,
+    );
+  }
+
+  return result.data as T;
 }

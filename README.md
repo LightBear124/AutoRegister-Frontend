@@ -1,73 +1,188 @@
-# React + TypeScript + Vite
+# Frontend — интерфейс системы паспортного контроля
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Этот файл относится только к **frontend-части** проекта.
 
-Currently, two official plugins are available:
+Frontend — это страницы, которые пользователь видит в браузере: форма входа, список рейсов, карточка рейса, информация о пассажирах и текущая заявка на прохождение паспортного контроля.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Backend запускается отдельно и отвечает за получение и сохранение данных. Для нормальной работы интерфейса backend должен быть доступен по адресу `http://localhost:8080`.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Что умеет интерфейс
 
-## Expanding the ESLint configuration
+- вход пользователя в систему;
+- переход на главную страницу после авторизации;
+- просмотр доступных рейсов;
+- просмотр пассажиров выбранного рейса;
+- открытие карточки пассажира во всплывающем окне;
+- добавление пассажира в текущую заявку;
+- просмотр заявки;
+- принятие решения по каждому пассажиру: пропустить или отказать;
+- завершение, отклонение и удаление заявки;
+- выход из системы.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Что используется во frontend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Инструмент | Для чего нужен |
+| --- | --- |
+| React | Создание страниц и элементов интерфейса |
+| TypeScript | Проверка типов данных и уменьшение количества ошибок |
+| Vite | Быстрый запуск frontend во время разработки |
+| React Router DOM | Переход между страницами без полной перезагрузки сайта |
+| CSS | Оформление страниц, таблиц, кнопок и всплывающих окон |
+| ESLint | Поиск типичных ошибок в коде |
+| Prettier | Автоматическое выравнивание и форматирование кода |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+---
+
+## Структура frontend
+
+```text
+frontend/
+├── src/
+│   ├── api/                    # Запросы к backend
+│   │   ├── auth.ts             # Выход пользователя и работа с localStorage
+│   │   ├── client.ts           # Общая функция для HTTP-запросов
+│   │   ├── crossings.ts        # Запросы для работы с заявками
+│   │   ├── crossingPassengers.ts # Работа с пассажирами внутри заявки
+│   │   ├── flights.ts          # Получение рейсов
+│   │   └── users.ts            # Вход и выход пользователя
+│   ├── components/
+│   │   └── ProtectedRoute.tsx  # Защита страниц от неавторизованных пользователей
+│   ├── pages/
+│   │   ├── LoginPage.tsx       # Страница входа
+│   │   ├── HomePage.tsx        # Главная страница
+│   │   ├── FlightsPage.tsx     # Список рейсов
+│   │   ├── FlightDetailPage.tsx # Пассажиры выбранного рейса
+│   │   └── RequestPage.tsx     # Работа с заявкой
+│   ├── types/
+│   │   └── api.ts              # Описание типов данных, получаемых от backend
+│   ├── App.tsx                 # Список маршрутов приложения
+│   ├── main.tsx                # Точка запуска frontend
+│   └── styles.css              # Общие стили
+├── Dockerfile                  # Запуск frontend в Docker
+├── index.html                  # Основной HTML-файл
+├── package.json                # Список зависимостей и команд npm
+├── package-lock.json           # Зафиксированные версии зависимостей
+├── vite.config.ts              # Настройки Vite
+└── README.md                   # Этот файл
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+## Быстрый запуск
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+### Что должно быть установлено
+
+Для запуска frontend без Docker нужен **Node.js 20 или новее**. Вместе с Node.js устанавливается команда `npm`.
+
+Проверить установку можно так:
+
+```bash
+node --version
+npm --version
 ```
+
+### Запуск frontend
+
+Откройте терминал в папке `frontend` и выполните:
+
+```bash
+npm install
+npm run dev
+```
+
+После запуска откройте в браузере:
+
+```text
+http://localhost:5173
+```
+
+> Важно: до запуска frontend необходимо запустить backend на порту `8080`. Иначе страницы откроются, но вход и загрузка данных работать не будут.
+
+---
+
+## Запуск frontend через Docker
+
+В папке `frontend`, где лежит `Dockerfile`, выполните:
+
+```bash
+docker build -t passport-control-frontend .
+docker run --rm -p 5173:5173 passport-control-frontend
+```
+
+После запуска откройте:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Основные адреса frontend
+
+| Страница | Адрес | Что находится на странице |
+| --- | --- | --- |
+| Вход | `/login` | Форма авторизации |
+| Главная | `/home` | Информация о текущем пользователе |
+| Рейсы | `/flights` | Список доступных рейсов |
+| Конкретный рейс | `/flights/:id` | Список пассажиров выбранного рейса |
+| Заявка | `/request/:id` | Пассажиры в заявке и кнопки принятия решения |
+
+Пример адреса конкретного рейса:
+
+```text
+http://localhost:5173/flights/1
+```
+
+---
+
+## Команды для работы с frontend
+
+| Команда | Что делает |
+| --- | --- |
+| `npm install` | Устанавливает необходимые зависимости |
+| `npm run dev` | Запускает frontend для разработки |
+| `npm run build` | Проверяет TypeScript и создаёт готовую сборку |
+| `npm run lint` | Проверяет код с помощью ESLint |
+| `npm run format` | Форматирует файлы с помощью Prettier |
+
+---
+
+## Как frontend общается с backend
+
+Все запросы отправляются на базовый адрес:
+
+```text
+http://localhost:8080/api
+```
+
+Например:
+
+| Действие пользователя | Запрос к backend |
+| --- | --- |
+| Войти в систему | `POST /api/users/login` |
+| Получить список рейсов | `GET /api/flights` |
+| Открыть рейс | `GET /api/flights/{id}` |
+| Получить текущую заявку | `GET /api/crossings/cart` |
+| Добавить пассажира | `POST /api/crossing-passengers` |
+| Открыть заявку | `GET /api/crossings/{id}` |
+
+---
+
+## Возможные проблемы
+
+| Проблема | Что проверить |
+| --- | --- |
+| Страница открывается, но данные не загружаются | Запущен ли backend на `http://localhost:8080` |
+| Не получается войти | Правильно ли введены логин и пароль; запущена ли база данных |
+| После изменения кода ничего не поменялось | Перезапустите `npm run dev` или обновите страницу через `Ctrl + F5` |
+| Порт `5173` уже занят | Остановите другой frontend-процесс или контейнер Docker |
+
+---
+
+## Автор
+
+**Макаров Дмитрий, ИС-23**
